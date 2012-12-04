@@ -4,45 +4,38 @@ fs = require 'fs'
 
 setupComponent = ->
   c = readenv.getComponent()
-  layouts = socket.createSocket()
   includes = socket.createSocket()
-  ins = socket.createSocket()
+  template = socket.createSocket()
+  variables = socket.createSocket()
   out = socket.createSocket()
-  c.inPorts.layouts.attach layouts
   c.inPorts.includes.attach includes
-  c.inPorts.in.attach ins
+  c.inPorts.template.attach template
+  c.inPorts.variables.attach variables
   c.outPorts.out.attach out
-  [c, layouts, includes, ins, out]
+  [c, includes, template, variables, out]
 
 exports['test simple Liquid Template'] = (test) ->
   test.expect 1
-  [c, layouts, includes, ins, out] = setupComponent()
+  [c, includes, template, variables, out] = setupComponent()
+
   out.once 'data', (data) ->
     test.equal data, 'Hello, Foo!'
     test.done()
 
-  layouts.send
-    path: '/foo/bar/user.html'
-    body: 'Hello, {{ current_user }}!'
-  ins.send
-    layout: 'user'
+  template.send 'Hello, {{ current_user }}!'
+  variables.send
     current_user: 'Foo'
 
 exports['test complex Liquid Template'] = (test) ->
   test.expect 3
-  [c, layouts, includes, ins, out] = setupComponent()
+  [c, includes, template, variables, out] = setupComponent()
   out.once 'data', (data) ->
     test.notEqual data.indexOf('<title>Hello, World - foo</title>'), -1
     test.notEqual data.indexOf('<title>First post</title>'), -1
     test.notEqual data.indexOf('<title>Second post</title>'), -1
     test.done()
 
-  template = "#{__dirname}/fixtures/feed.html"
-  layouts.send
-    path: template
-    body: fs.readFileSync template, 'utf-8'
-  ins.send
-    layout: 'feed'
+  variables.send
     site:
       name: 'Hello, World'
       categories:
@@ -58,27 +51,5 @@ exports['test complex Liquid Template'] = (test) ->
     page:
       categorization: 'foo'
 
-exports['test Liquid Template inheritance'] = (test) ->
-  test.expect 3
-  [c, layouts, includes, ins, out] = setupComponent()
-  out.once 'data', (data) ->
-    test.notEqual data.indexOf('<content>'), -1
-    test.notEqual data.indexOf('Hello, Foo!'), -1
-    test.notEqual data.indexOf('</content>'), -1
-    test.done()
-
-  # Base template
-  template = "#{__dirname}/fixtures/base.html"
-  layouts.send
-    path: template
-    body: fs.readFileSync template, 'utf-8'
-  # Inherited template
-  template = "#{__dirname}/fixtures/child.html"
-  layouts.send
-    path: template
-    body: fs.readFileSync template, 'utf-8'
-    layout: 'base'
-
-  ins.send
-    layout: 'child'
-    name: 'Foo'
+  templateFile = "#{__dirname}/fixtures/feed.html"
+  template.send fs.readFileSync templateFile, 'utf-8'
