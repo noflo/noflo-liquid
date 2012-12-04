@@ -57,3 +57,28 @@ exports['test complex Liquid Template'] = (test) ->
         ]
     page:
       categorization: 'foo'
+
+exports['test Liquid Template inheritance'] = (test) ->
+  test.expect 3
+  [c, layouts, includes, ins, out] = setupComponent()
+  out.once 'data', (data) ->
+    test.notEqual data.indexOf('<content>'), -1
+    test.notEqual data.indexOf('Hello, Foo!'), -1
+    test.notEqual data.indexOf('</content>'), -1
+    test.done()
+
+  # Base template
+  template = "#{__dirname}/fixtures/base.html"
+  layouts.send
+    path: template
+    body: fs.readFileSync template, 'utf-8'
+  # Inherited template
+  template = "#{__dirname}/fixtures/child.html"
+  layouts.send
+    path: template
+    body: fs.readFileSync template, 'utf-8'
+    layout: 'base'
+
+  ins.send
+    layout: 'child'
+    name: 'Foo'

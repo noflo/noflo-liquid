@@ -5,6 +5,8 @@ path = require 'path'
 class Template extends noflo.Component
   constructor: ->
     @includes = {}
+    @parsed = {}
+
     @inPorts =
       layouts: new noflo.Port()
       includes: new noflo.Port()
@@ -44,15 +46,26 @@ class Template extends noflo.Component
     name = @templateName template.path
     @includes[name] = template
 
-  parseTemplate: (templateName) ->
+  getTemplate: (templateName) ->
     unless @includes[templateName]
       @error new Error "Template #{templateName} not found"
       return
 
+    template = @includes[templateName]
+    if @includes[templateName].layout
+      parent = @getTemplate @includes[templateName].layout
+      if parent
+        template.body = parent.replace '{{ content }}', template.body
+    template.body
+
+  parseTemplate: (templateName) ->
+    return @parsed[templateName] if @parsed[templateName]
+
     try
-      liquid.Template.parse @includes[templateName].body
+      @parsed[templateName] = liquid.Template.parse @getTemplate templateName
     catch e
       @error e
+    @parsed[templateName]
 
   error: (error) ->
     return unless @outPorts.error.isAttached()
