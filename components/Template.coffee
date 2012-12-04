@@ -2,6 +2,9 @@ noflo = require 'noflo'
 liquid = require 'liquid-node'
 path = require 'path'
 
+# Our local additional tags
+includeTag = require '../tags/include.coffee'
+
 class Template extends noflo.Component
   constructor: ->
     @includes = {}
@@ -39,18 +42,22 @@ class Template extends noflo.Component
     @inPorts.variables.on 'disconnect', =>
       @outPorts.out.disconnect() unless @inPorts.template.isConnected()
 
+    includeTag.registerInclude (includeName) =>
+      @includes[includeName]
+
   render: (template, data) ->
     tmpl = @parseTemplate template
+    return unless tmpl
     promise = tmpl.render data
     promise.done (rendered) =>
       @outPorts.out.send rendered
 
-  templateName: (templatePath) ->
-    path.basename templatePath, path.extname templatePath
+  includeName: (templatePath) ->
+    path.basename templatePath
 
   addInclude: (template) ->
-    name = @templateName template.path
-    @includes[name] = template
+    name = @includeName template.path
+    @includes[name] = template.body
 
   parseTemplate: (template) ->
     try
@@ -59,8 +66,9 @@ class Template extends noflo.Component
       @error e
 
   error: (error) ->
+    console.log error
     return unless @outPorts.error.isAttached()
-    @outPorts.error.send e
+    @outPorts.error.send error
     @outPorts.error.disconnect()
 
 exports.getComponent = -> new Template

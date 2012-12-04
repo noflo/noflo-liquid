@@ -2,7 +2,7 @@
   "name": "noflo-liquid",
   "description": "Liquid Templating components for the NoFlo flow-based programming environment",
   "author": "Henri Bergius <henri.bergius@iki.fi>",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "licenses": [{
     "type": "MIT",
     "url": "https://github.com/bergie/noflo/raw/master/LICENSE"
@@ -12,12 +12,12 @@
   },
   "dependencies": {
     "noflo": "0.2.x",
-    "liquid-node": "0.0.x"
+    "liquid-node": "0.0.x",
+    "coffee-script": "1.4.x"
   },
   "devDependencies": {
     "nodeunit": ">=0.6.0",
-    "coffeelint": "*",
-    "coffee-script": "1.4.x"
+    "coffeelint": "*"
   },
   "noflo": {
     "components": {
@@ -25,7 +25,7 @@
     }
   },
   "scripts": {
-    "pretest": "./node_modules/.bin/coffeelint -r components",
+    "pretest": "./node_modules/.bin/coffeelint -r components tags",
     "test": "./node_modules/.bin/nodeunit test"
   }
 }

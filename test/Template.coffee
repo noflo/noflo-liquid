@@ -53,3 +53,24 @@ exports['test complex Liquid Template'] = (test) ->
 
   templateFile = "#{__dirname}/fixtures/feed.html"
   template.send fs.readFileSync templateFile, 'utf-8'
+
+exports['test Liquid Template includes'] = (test) ->
+  test.expect 3
+  [c, includes, template, variables, out] = setupComponent()
+
+  out.once 'data', (data) ->
+    test.notEqual data.indexOf('<content>'), -1
+    test.notEqual data.indexOf('Hello, Foo'), -1
+    test.notEqual data.indexOf('</content>'), -1
+    test.done()
+
+  includeFile = "#{__dirname}/fixtures/username.html"
+  includes.send
+    path: includeFile
+    body: fs.readFileSync includeFile, 'utf-8'
+
+  templateFile = "#{__dirname}/fixtures/test_include.html"
+  template.send fs.readFileSync templateFile, 'utf-8'
+
+  variables.send
+    name: 'Foo'
