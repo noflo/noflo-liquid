@@ -10,10 +10,14 @@ exports.registerInclude = (getter) ->
     getPartial: (name) ->
       return @parsed[name] if @parsed[name]
       template = getter name
+      return unless template
       @parsed[name] = Liquid.Template.parse template
 
     render: (context) ->
       partial = @getPartial @includeName
-      partial.render context
+      try
+        return partial.render context
+      catch e
+        return ''
 
   Liquid.Template.registerTag 'include', Include
