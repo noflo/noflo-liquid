@@ -10,6 +10,9 @@ class Template extends noflo.Component
     @includes = {}
     @variables = null
     @template = null
+    @disconnected = false
+
+    @groups = []
 
     @inPorts =
       includes: new noflo.Port()
@@ -22,35 +25,61 @@ class Template extends noflo.Component
     @inPorts.includes.on 'data', (data) =>
       @addInclude data
 
+    @inPorts.includes.on 'disconnect', =>
+      do @handleDisconnect
+
+    @inPorts.template.on 'begingroup', (group) =>
+      @groups.push group
+
     @inPorts.template.on 'data', (data) =>
       if @variables
-        @render data, @variables
+        @render data, @variables, @groups.slice 0
         @variables = null
         return
-      @template = data
+      @template =
+        template: data
+        group: @groups.slice 0
+
+    @inPorts.template.on 'endgroup', =>
+      @groups.pop()
 
     @inPorts.template.on 'disconnect', =>
-      @outPorts.out.disconnect() unless @inPorts.variables.isConnected()
+      do @handleDisconnect
+      @groups = []
 
     @inPorts.variables.on 'data', (data) =>
       if @template
-        @render @template, data
+        @render @template.template, data, @template.group
         @template = null
         return
       @variables = data
 
     @inPorts.variables.on 'disconnect', =>
-      @outPorts.out.disconnect() unless @inPorts.template.isConnected()
+      do @handleDisconnect
 
     includeTag.registerInclude (includeName) =>
       @includes[includeName]
 
-  render: (template, data) ->
+  handleDisconnect: ->
+    return if @inPorts.includes.isConnected()
+    return if @inPorts.template.isConnected()
+    return if @inPorts.variables.isConnected()
+    @disconnected = true
+
+  render: (template, data, groups) ->
     tmpl = @parseTemplate template
-    return unless tmpl
+    unless tmpl
+      @outPorts.out.send ''
+      @outPorts.out.disconnect() if @disconnected
+      return
     promise = tmpl.render data
     promise.done (rendered) =>
+      for group in groups
+        @outPorts.out.beginGroup group
       @outPorts.out.send rendered
+      for group in groups
+        @outPorts.out.endGroup group
+      @outPorts.out.disconnect() if @disconnected
 
   includeName: (templatePath) ->
     path.basename templatePath
@@ -66,7 +95,6 @@ class Template extends noflo.Component
       @error e
 
   error: (error) ->
-    console.log error
     return unless @outPorts.error.isAttached()
     @outPorts.error.send error
     @outPorts.error.disconnect()
