@@ -89,7 +89,7 @@ exports['test Liquid Template custom date_to_xmlschema filter'] = (test) ->
 
   template.send '{{ content | date_to_xmlschema }}'
   variables.send
-    content: '2013-08-08 12:12:06'
+    content: 'Fri, 8 Aug 2013 12:12:06 GMT+0200'
 
 exports['test Liquid Template custom number_of_words filter'] = (test) ->
   test.expect 1
