@@ -42,11 +42,13 @@ module.exports =
     return input.toISOString()
 
   number_of_words: (input) ->
+    return input unless input
     input = input.replace /(^\s*)|(\s*$)/gi, ''
     input = input.replace /[ ]{2,}/gi, ' '
     input = input.replace /\n /, "\n"
     input.split(' ').length
 
   strip_html: (input) ->
+    return input unless input
     regexp = new RegExp '<[^>]*>', 'g'
     input.replace regexp, ''
