@@ -6,6 +6,7 @@
     <link>{{ site.url }}</link>
     <language>{{ site.language }}</language>
     <lastBuildDate>{{ site.time | date: "%a, %d %b %Y %H:%M:%S %z" }}</lastBuildDate>
+    <items>{{ site.categories[page.categorization] | size }}</items>
     {% for post in site.categories[page.categorization] limit:10 %}
     <item>
       <title>{{ post.title }}</title>

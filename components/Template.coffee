@@ -5,6 +5,10 @@ path = require 'path'
 # Our local additional tags
 includeTag = require '../tags/include.coffee'
 
+# We include Jekyll-style filters by default
+jekFilters = require '../filter/jekyll.coffee'
+liquid.Template.registerFilter jekFilters
+
 class Template extends noflo.Component
   constructor: ->
     @includes = {}
