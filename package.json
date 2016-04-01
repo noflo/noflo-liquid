@@ -21,8 +21,13 @@
     "noflo": "~0.7.1"
   },
   "devDependencies": {
-    "nodeunit": ">=0.6.0",
-    "coffeelint": "*"
+    "chai": "^3.5.0",
+    "coffeelint": "*",
+    "grunt": "^0.4.5",
+    "grunt-coffeelint": "0.0.15",
+    "grunt-mocha-test": "^0.12.7",
+    "mocha": "^2.4.5",
+    "nodeunit": ">=0.6.0"
   },
   "noflo": {
     "components": {
@@ -30,7 +35,6 @@
     }
   },
   "scripts": {
-    "pretest": "./node_modules/.bin/coffeelint -r components tags",
-    "test": "./node_modules/.bin/nodeunit test"
+    "test": "grunt test"
   }
 }
