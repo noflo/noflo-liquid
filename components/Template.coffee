@@ -7,7 +7,6 @@ includeTag = require '../tags/include.coffee'
 
 # We include Jekyll-style filters by default
 jekFilters = require '../filter/jekyll.coffee'
-liquid.Template.registerFilter jekFilters
 
 class Template extends noflo.Component
   constructor: ->
@@ -61,9 +60,6 @@ class Template extends noflo.Component
     @inPorts.variables.on 'disconnect', =>
       do @handleDisconnect
 
-    includeTag.registerInclude (includeName) =>
-      @includes[includeName]
-
   handleDisconnect: ->
     return if @inPorts.includes.isConnected()
     return if @inPorts.template.isConnected()
@@ -71,19 +67,19 @@ class Template extends noflo.Component
     @disconnected = true
 
   render: (template, data, groups) ->
-    tmpl = @parseTemplate template
-    unless tmpl
-      @outPorts.out.send ''
-      @outPorts.out.disconnect() if @disconnected
-      return
-    promise = tmpl.render data
-    promise.done (rendered) =>
-      for group in groups
-        @outPorts.out.beginGroup group
-      @outPorts.out.send rendered
-      for group in groups
-        @outPorts.out.endGroup group
-      @outPorts.out.disconnect() if @disconnected
+    @parseTemplate template, (err, tmpl) =>
+      unless tmpl
+        @outPorts.out.send ''
+        @outPorts.out.disconnect() if @disconnected
+        return
+      tmpl.render data
+      .then (rendered) =>
+        for group in groups
+          @outPorts.out.beginGroup group
+        @outPorts.out.send rendered
+        for group in groups
+          @outPorts.out.endGroup group
+        @outPorts.out.disconnect() if @disconnected
 
   includeName: (templatePath) ->
     path.basename templatePath
@@ -92,11 +88,12 @@ class Template extends noflo.Component
     name = @includeName template.path
     @includes[name] = template.body
 
-  parseTemplate: (template) ->
-    try
-      return liquid.Template.parse template
-    catch e
-      @error e
+  parseTemplate: (template, callback) ->
+    engine = new liquid.Engine
+    includeTag.registerInclude engine, (includeName) => @includes[includeName]
+    engine.registerFilters jekFilters
+    engine.parse template
+    .nodeify callback
 
   error: (error) ->
     return unless @outPorts.error.isAttached()

@@ -1,3 +1,5 @@
+he = require 'he'
+
 months = [
   'January'
   'February'
@@ -52,3 +54,6 @@ module.exports =
     return input unless input
     regexp = new RegExp '<[^>]*>', 'g'
     input.replace regexp, ''
+
+  xml_escape: (input) ->
+    he.encode input

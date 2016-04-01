@@ -31,7 +31,7 @@ exports['test complex Liquid Template'] = (test) ->
   [c, includes, template, variables, out] = setupComponent()
   out.once 'data', (data) ->
     test.notEqual data.indexOf('<items>2</items>'), -1
-    test.notEqual data.indexOf('<title>Hello, World - foo</title>'), -1
+    test.notEqual data.indexOf('<title>Hello, World - Foo</title>'), -1
     test.notEqual data.indexOf('<title>First post</title>'), -1
     test.notEqual data.indexOf('<title>Second post</title>'), -1
     test.done()
