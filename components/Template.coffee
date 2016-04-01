@@ -93,7 +93,10 @@ class Template extends noflo.Component
     includeTag.registerInclude engine, (includeName) => @includes[includeName]
     engine.registerFilters jekFilters
     engine.parse template
-    .nodeify callback
+    .then (tmpl) ->
+      callback null, tmpl
+    .catch (e) ->
+      callback e
 
   error: (error) ->
     return unless @outPorts.error.isAttached()
