@@ -15,7 +15,6 @@ exports.getComponent = ->
 
   c.inPorts.add 'includes',
     datatype: 'object'
-    control: true
   c.inPorts.add 'template',
     datatype: 'string'
   c.inPorts.add 'variables',
@@ -26,20 +25,22 @@ exports.getComponent = ->
   c.outPorts.add 'error',
     datatype: 'object'
 
+  c.includes = {}
+
   c.process (input, output) ->
+    if input.has 'includes'
+      include = input.get 'includes'
+      return unless include.type is 'data'
+      c.includes[path.basename(include.data.path)] = include.data.body
+      return
+
     return unless input.has 'template', 'variables'
     [template, variables] = input.get 'template', 'variables'
     return unless variables.type is 'data'
     return unless template.type is 'data'
 
-    # FIXME: We may want to collect these instead of just having one
-    includes = {}
-    if input.has 'includes'
-      include = input.getData 'includes'
-      includes[path.basename(include.path)] = include.body
-
     engine = new liquid.Engine
-    includeTag.registerInclude engine, (name) -> includes[name]
+    includeTag.registerInclude engine, (name) -> c.includes[name]
     engine.registerFilters jekFilters
     engine.parse template.data
     .then (tmpl) ->
