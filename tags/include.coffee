@@ -1,9 +1,9 @@
 Liquid = require 'liquid-node'
 
-exports.registerInclude = (getter) ->
+exports.registerInclude = (engine, getter) ->
   class Include extends Liquid.Tag
     constructor: (tagName, markup, tokens) ->
-      @includeName = markup.trim()
+      @includeName = tokens.trim()
       @parsed = {}
       super
 
@@ -11,13 +11,11 @@ exports.registerInclude = (getter) ->
       return @parsed[name] if @parsed[name]
       template = getter name
       return unless template
-      @parsed[name] = Liquid.Template.parse template
+      @parsed[name] = engine.parse template
 
     render: (context) ->
       partial = @getPartial @includeName
-      try
-        return partial.render context
-      catch e
-        return ''
+      partial.then (p) ->
+        p.render context
 
-  Liquid.Template.registerTag 'include', Include
+  engine.registerTag 'include', Include

@@ -1,5 +1,13 @@
 language: node_js
 node_js:
-  - "0.10"
-
-script: npm test
+- '4.2'
+before_script:
+- npm install grunt-cli -g
+deploy:
+  provider: npm
+  email: henri.bergius@iki.fi
+  api_key:
+    secure: cDvr2IwQwiSZsnvgQBJBNFxa49IydxeD9stwsR4OMxNkF1inlPMswH5Xm+zCj5eSbIh74KLlzLvJ51d35n86WP8MWn4yc0QK1+czVyrV/CQzWBwZdzoiA5gNPGNuqU8lV4rKJxWNq8agHhYNT6JZP3fy5FlMW9IfwCwQhp9ICJM=
+  on:
+    tags: true
+    repo: noflo/noflo-liquid

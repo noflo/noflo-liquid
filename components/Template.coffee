@@ -7,100 +7,45 @@ includeTag = require '../tags/include.coffee'
 
 # We include Jekyll-style filters by default
 jekFilters = require '../filter/jekyll.coffee'
-liquid.Template.registerFilter jekFilters
 
-class Template extends noflo.Component
-  constructor: ->
-    @includes = {}
-    @variables = null
-    @template = null
-    @disconnected = false
+exports.getComponent = ->
+  c = new noflo.Component
+  c.description = 'Process data with the Liquid template engine'
+  c.icon = 'html5'
 
-    @groups = []
+  c.inPorts.add 'includes',
+    datatype: 'object'
+  c.inPorts.add 'template',
+    datatype: 'string'
+  c.inPorts.add 'variables',
+    datatype: 'object'
 
-    @inPorts =
-      includes: new noflo.Port 'object'
-      template: new noflo.Port 'string'
-      variables: new noflo.Port 'object'
-    @outPorts =
-      out: new noflo.Port 'string'
-      error: new noflo.Port 'object'
+  c.outPorts.add 'out',
+    datatype: 'string'
+  c.outPorts.add 'error',
+    datatype: 'object'
 
-    @inPorts.includes.on 'data', (data) =>
-      @addInclude data
+  c.includes = {}
 
-    @inPorts.includes.on 'disconnect', =>
-      do @handleDisconnect
-
-    @inPorts.template.on 'begingroup', (group) =>
-      @groups.push group
-
-    @inPorts.template.on 'data', (data) =>
-      if @variables
-        @render data, @variables, @groups.slice 0
-        @variables = null
-        return
-      @template =
-        template: data
-        group: @groups.slice 0
-
-    @inPorts.template.on 'endgroup', =>
-      @groups.pop()
-
-    @inPorts.template.on 'disconnect', =>
-      do @handleDisconnect
-      @groups = []
-
-    @inPorts.variables.on 'data', (data) =>
-      if @template
-        @render @template.template, data, @template.group
-        @template = null
-        return
-      @variables = data
-
-    @inPorts.variables.on 'disconnect', =>
-      do @handleDisconnect
-
-    includeTag.registerInclude (includeName) =>
-      @includes[includeName]
-
-  handleDisconnect: ->
-    return if @inPorts.includes.isConnected()
-    return if @inPorts.template.isConnected()
-    return if @inPorts.variables.isConnected()
-    @disconnected = true
-
-  render: (template, data, groups) ->
-    tmpl = @parseTemplate template
-    unless tmpl
-      @outPorts.out.send ''
-      @outPorts.out.disconnect() if @disconnected
+  c.process (input, output) ->
+    if input.has 'includes'
+      include = input.get 'includes'
+      return unless include.type is 'data'
+      c.includes[path.basename(include.data.path)] = include.data.body
       return
-    promise = tmpl.render data
-    promise.done (rendered) =>
-      for group in groups
-        @outPorts.out.beginGroup group
-      @outPorts.out.send rendered
-      for group in groups
-        @outPorts.out.endGroup group
-      @outPorts.out.disconnect() if @disconnected
 
-  includeName: (templatePath) ->
-    path.basename templatePath
+    return unless input.has 'template', 'variables'
+    [template, variables] = input.get 'template', 'variables'
+    return unless variables.type is 'data'
+    return unless template.type is 'data'
 
-  addInclude: (template) ->
-    name = @includeName template.path
-    @includes[name] = template.body
-
-  parseTemplate: (template) ->
-    try
-      return liquid.Template.parse template
-    catch e
-      @error e
-
-  error: (error) ->
-    return unless @outPorts.error.isAttached()
-    @outPorts.error.send error
-    @outPorts.error.disconnect()
-
-exports.getComponent = -> new Template
+    engine = new liquid.Engine
+    includeTag.registerInclude engine, (name) -> c.includes[name]
+    engine.registerFilters jekFilters
+    engine.parse template.data
+    .then (tmpl) ->
+      tmpl.render variables.data
+    .then (rendered) ->
+      output.sendDone
+        out: rendered
+    , output.sendDone.bind output
