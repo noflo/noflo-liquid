@@ -28,13 +28,14 @@ exports.getComponent = ->
   c.includes = {}
 
   c.process (input, output) ->
+    c.autoOrdering = false
     if input.has 'includes'
       include = input.get 'includes'
       return unless include.type is 'data'
       c.includes[path.basename(include.data.path)] = include.data.body
       return
 
-    return unless input.has 'template', 'variables'
+    return unless input.has 'template', 'variables', (ip) -> ip.type is 'data'
     [template, variables] = input.get 'template', 'variables'
     return unless variables.type is 'data'
     return unless template.type is 'data'
