@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "coffee-script": "~1.12.1",
-    "he": "^1.0.0",
+    "he": "^1.1.0",
     "liquid-node": "~2.6.1",
     "noflo": "~0.7.4"
   },
