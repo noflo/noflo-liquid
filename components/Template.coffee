@@ -27,25 +27,24 @@ exports.getComponent = ->
 
   c.includes = {}
 
-  c.process (input, output) ->
-    c.autoOrdering = false
-    if input.has 'includes'
-      include = input.get 'includes'
-      return unless include.type is 'data'
-      c.includes[path.basename(include.data.path)] = include.data.body
-      return
+  c.forwardBrackets =
+    variables: ['out', 'error']
 
-    return unless input.has 'template', 'variables', (ip) -> ip.type is 'data'
-    [template, variables] = input.get 'template', 'variables'
-    return unless variables.type is 'data'
-    return unless template.type is 'data'
+  c.process (input, output) ->
+    if input.hasData 'includes'
+      include = input.getData 'includes'
+      c.includes[path.basename(include.path)] = include.body
+      return output.done()
+
+    return unless input.hasData 'template', 'variables'
+    [template, variables] = input.getData 'template', 'variables'
 
     engine = new liquid.Engine
-    includeTag.registerInclude engine, (name) -> c.includes[name]
     engine.registerFilters jekFilters
-    engine.parse template.data
+    includeTag.registerInclude engine, (name) -> c.includes[name]
+    engine.parse template
     .then (tmpl) ->
-      tmpl.render variables.data
+      tmpl.render variables
     .then (rendered) ->
       output.sendDone
         out: rendered
