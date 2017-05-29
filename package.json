@@ -21,7 +21,7 @@
     "noflo": "0.x >= 0.8"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "^4.0.0",
     "grunt": "^1.0.1",
     "grunt-coffeelint": "^0.0.16",
     "grunt-mocha-test": "^0.13.2",
