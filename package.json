@@ -17,7 +17,7 @@
   "dependencies": {
     "coffee-script": "~1.12.1",
     "he": "^1.1.0",
-    "liquid-node": "~2.6.1",
+    "liquid-node": "~3.0.0",
     "noflo": "0.x >= 0.8"
   },
   "devDependencies": {
