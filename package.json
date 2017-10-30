@@ -28,9 +28,7 @@
     "mocha": "^4.0.0"
   },
   "noflo": {
-    "components": {
-      "Template": "./components/Template.coffee"
-    }
+    "icon": "clipboard"
   },
   "scripts": {
     "test": "grunt test"
