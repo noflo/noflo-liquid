@@ -15,22 +15,21 @@
     "node": ">=0.6.0"
   },
   "dependencies": {
-    "coffee-script": "~1.12.1",
     "he": "^1.1.0",
     "liquid-node": "~3.0.0",
     "noflo": "0.x >= 0.8"
   },
   "devDependencies": {
     "chai": "^4.0.0",
-    "grunt": "^1.0.1",
-    "grunt-coffeelint": "^0.0.16",
-    "grunt-mocha-test": "^0.13.2",
+    "coffeelint": "^2.0.7",
+    "coffeescript": "^2.0.2",
     "mocha": "^4.0.0"
   },
   "noflo": {
     "icon": "clipboard"
   },
   "scripts": {
-    "test": "grunt test"
+    "pretest": "coffeelint -r components",
+    "test": "mocha --require coffeescript/register -R spec -t 2000 spec/*.coffee"
   }
 }
