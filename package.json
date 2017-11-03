@@ -29,7 +29,7 @@
     "icon": "clipboard"
   },
   "scripts": {
-    "pretest": "coffeelint -r components",
+    "pretest": "coffeelint -r components tags filter",
     "test": "mocha --require coffeescript/register -R spec -t 2000 spec/*.coffee"
   }
 }
