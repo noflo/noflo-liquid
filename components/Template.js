@@ -2,6 +2,8 @@ const noflo = require('noflo');
 const liquid = require('liquid-node');
 const path = require('path');
 
+// @runtime noflo-nodejs
+
 // Our local additional tags
 const includeTag = require('../tags/include');
 
