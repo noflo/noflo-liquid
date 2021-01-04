@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const he = require('he');
 
 const months = [
@@ -17,49 +12,50 @@ const months = [
   'September',
   'October',
   'November',
-  'December'
+  'December',
 ];
 
-const normalizeDate = function(input) {
+const normalizeDate = function (input) {
   if (!(input instanceof Date)) {
-    input = new Date(input);
+    return new Date(input);
   }
   return input;
 };
 
 module.exports = {
   date_to_string(input) {
-    input = normalizeDate(input);
-    const d = input.getDate();
-    const m = months[input.getMonth()];
-    const y = input.getFullYear();
+    const date = normalizeDate(input);
+    const d = date.getDate();
+    const m = months[date.getMonth()];
+    const y = date.getFullYear();
     return `${d} ${m.substr(0, 3)} ${y}`;
   },
 
   date_to_long_string(input) {
-    input = normalizeDate(input);
-    const d = input.getDate();
-    const m = months[input.getMonth()];
-    const y = input.getFullYear();
+    const date = normalizeDate(input);
+    const d = date.getDate();
+    const m = months[date.getMonth()];
+    const y = date.getFullYear();
     return `${d} ${m} ${y}`;
   },
 
   date_to_rfc822(input) {
-    input = normalizeDate(input);
-    return input.toUTCString();
+    const date = normalizeDate(input);
+    return date.toUTCString();
   },
 
   date_to_xmlschema(input) {
-    input = normalizeDate(input);
-    return input.toISOString();
+    const date = normalizeDate(input);
+    return date.toISOString();
   },
 
   number_of_words(input) {
     if (!input) { return input; }
-    input = input.replace(/(^\s*)|(\s*$)/gi, '');
-    input = input.replace(/[ ]{2,}/gi, ' ');
-    input = input.replace(/\n /, "\n");
-    return input.split(' ').length;
+    let replaced = input;
+    replaced = replaced.replace(/(^\s*)|(\s*$)/gi, '');
+    replaced = replaced.replace(/[ ]{2,}/gi, ' ');
+    replaced = replaced.replace(/\n /, '\n');
+    return replaced.split(' ').length;
   },
 
   strip_html(input) {
@@ -70,5 +66,5 @@ module.exports = {
 
   xml_escape(input) {
     return he.encode(input);
-  }
+  },
 };

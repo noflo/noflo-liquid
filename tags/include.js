@@ -5,10 +5,10 @@
  */
 const Liquid = require('liquid-node');
 
-exports.registerInclude = function(engine, getter) {
+exports.registerInclude = function (engine, getter) {
   class Include extends Liquid.Tag {
-    constructor(tagName, markup, tokens) {
-      super(...arguments);
+    constructor(tagName, markup, tokens, ...rest) {
+      super(tagName, markup, tokens, ...rest);
       this.includeName = tokens.trim();
       this.parsed = {};
     }
@@ -16,13 +16,14 @@ exports.registerInclude = function(engine, getter) {
     getPartial(name) {
       if (this.parsed[name]) { return this.parsed[name]; }
       const template = getter(name);
-      if (!template) { return; }
-      return this.parsed[name] = engine.parse(template);
+      if (!template) { return undefined; }
+      this.parsed[name] = engine.parse(template);
+      return this.parsed[name];
     }
 
     render(context) {
       const partial = this.getPartial(this.includeName);
-      return partial.then(p => p.render(context));
+      return partial.then((p) => p.render(context));
     }
   }
 
