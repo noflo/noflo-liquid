@@ -1,54 +1,84 @@
-const noflo = require('noflo');
-const liquid = require('liquid-node');
-const path = require('path');
+import path from "node:path";
+import { Component } from "@noflo/noflo";
+import { Liquid } from "liquidjs";
+import { jekyllFilters } from "../filter/jekyll.js";
+import { registerIncludeTag } from "../tags/include.js";
 
-// @runtime noflo-nodejs
+/**
+ * Processes a Liquid template with the given variables, providing the
+ * Jekyll-compatible filters and runtime-registered includes.
+ * @returns {import("@noflo/noflo").Component} The configured component
+ */
+export function getComponent() {
+  /** @type {Record<string, string>} */
+  const includes = {};
+  const engine = new Liquid();
+  for (const [name, filter] of Object.entries(jekyllFilters)) {
+    engine.registerFilter(name, filter);
+  }
+  registerIncludeTag(engine, includes);
 
-// Our local additional tags
-const includeTag = require('../tags/include');
+  const c = new Component({
+    description: "Process data with the Liquid template engine",
+    icon: "html5",
+    inPorts: {
+      includes: {
+        datatype: "object",
+        description:
+          "Include registration: an object with path and body. Includes must arrive before the template",
+        required: false,
+      },
+      template: {
+        datatype: "string",
+        description: "Liquid template source",
+        required: true,
+      },
+      variables: {
+        datatype: "object",
+        description: "Variables available to the template",
+        required: true,
+      },
+    },
+    outPorts: {
+      out: {
+        datatype: "string",
+        description: "Rendered output",
+      },
+      error: {
+        datatype: "object",
+      },
+    },
+  });
 
-// We include Jekyll-style filters by default
-const jekFilters = require('../filter/jekyll');
+  c.forwardBrackets = { variables: ["out", "error"] };
 
-exports.getComponent = function () {
-  const c = new noflo.Component();
-  c.description = 'Process data with the Liquid template engine';
-  c.icon = 'html5';
+  c.tearDown = async () => {
+    for (const key of Object.keys(includes)) {
+      delete includes[key];
+    }
+  };
 
-  c.inPorts.add('includes',
-    { datatype: 'object' });
-  c.inPorts.add('template',
-    { datatype: 'string' });
-  c.inPorts.add('variables',
-    { datatype: 'object' });
-
-  c.outPorts.add('out',
-    { datatype: 'string' });
-  c.outPorts.add('error',
-    { datatype: 'object' });
-
-  c.includes = {};
-
-  c.forwardBrackets = { variables: ['out', 'error'] };
-
-  return c.process((input, output) => {
-    if (input.hasData('includes')) {
-      const include = input.getData('includes');
-      c.includes[path.basename(include.path)] = include.body;
+  c.process((input, output) => {
+    if (input.hasData("includes")) {
+      const include = input.getData("includes");
+      includes[path.basename(include.path)] = include.body;
       output.done();
       return;
     }
-
-    if (!input.hasData('template', 'variables')) { return; }
-    const [template, variables] = Array.from(input.getData('template', 'variables'));
-
-    const engine = new liquid.Engine();
-    engine.registerFilters(jekFilters);
-    includeTag.registerInclude(engine, (name) => c.includes[name]);
-    engine.parse(template)
-      .then((tmpl) => tmpl.render(variables))
-      .then((rendered) => output.sendDone({
-        out: rendered,
-      }), output.sendDone.bind(output));
+    if (!input.hasData("template", "variables")) {
+      return;
+    }
+    const [template, variables] = input.getData("template", "variables");
+    engine
+      .parseAndRender(template, variables)
+      .then((rendered) => {
+        output.sendDone({ out: rendered });
+      })
+      .catch((error) => {
+        output.error(error instanceof Error ? error : new Error(String(error)));
+        output.done();
+      });
   });
-};
+
+  return c;
+}

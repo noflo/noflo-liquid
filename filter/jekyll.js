@@ -1,29 +1,34 @@
-const he = require('he');
+import he from "he";
 
 const months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
-const normalizeDate = function (input) {
+/**
+ * @param {unknown} input
+ * @returns {Date}
+ */
+const normalizeDate = (input) => {
   if (!(input instanceof Date)) {
-    return new Date(input);
+    return new Date(/** @type {any} */ (input));
   }
   return input;
 };
 
-module.exports = {
-  date_to_string(input) {
+/** Jekyll-compatible Liquid filters. */
+export const jekyllFilters = {
+  date_to_string(/** @type {unknown} */ input) {
     const date = normalizeDate(input);
     const d = date.getDate();
     const m = months[date.getMonth()];
@@ -31,7 +36,7 @@ module.exports = {
     return `${d} ${m.substr(0, 3)} ${y}`;
   },
 
-  date_to_long_string(input) {
+  date_to_long_string(/** @type {unknown} */ input) {
     const date = normalizeDate(input);
     const d = date.getDate();
     const m = months[date.getMonth()];
@@ -39,32 +44,36 @@ module.exports = {
     return `${d} ${m} ${y}`;
   },
 
-  date_to_rfc822(input) {
+  date_to_rfc822(/** @type {unknown} */ input) {
     const date = normalizeDate(input);
     return date.toUTCString();
   },
 
-  date_to_xmlschema(input) {
+  date_to_xmlschema(/** @type {unknown} */ input) {
     const date = normalizeDate(input);
     return date.toISOString();
   },
 
-  number_of_words(input) {
-    if (!input) { return input; }
+  number_of_words(/** @type {string | undefined} */ input) {
+    if (!input) {
+      return input;
+    }
     let replaced = input;
-    replaced = replaced.replace(/(^\s*)|(\s*$)/gi, '');
-    replaced = replaced.replace(/[ ]{2,}/gi, ' ');
-    replaced = replaced.replace(/\n /, '\n');
-    return replaced.split(' ').length;
+    replaced = replaced.replace(/(^\s*)|(\s*$)/gi, "");
+    replaced = replaced.replace(/[ ]{2,}/gi, " ");
+    replaced = replaced.replace(/\n /, "\n");
+    return replaced.split(" ").length;
   },
 
-  strip_html(input) {
-    if (!input) { return input; }
-    const regexp = new RegExp('<[^>]*>', 'g');
-    return input.replace(regexp, '');
+  strip_html(/** @type {string | undefined} */ input) {
+    if (!input) {
+      return input;
+    }
+    const regexp = /<[^>]*>/g;
+    return input.replace(regexp, "");
   },
 
-  xml_escape(input) {
+  xml_escape(/** @type {string} */ input) {
     return he.encode(input);
   },
 };
