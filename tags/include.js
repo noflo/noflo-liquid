@@ -1,31 +1,33 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+/**
+ * Registers a Jekyll-style `{% include %}` tag on a liquidjs engine. The
+ * tag renders partial bodies from the given lookup map, which the
+ * component fills from its `includes` port.
+ *
+ * @param {import("liquidjs").Liquid} engine
+ * @param {Record<string, string>} includes Map of include name to partial body
+ * @returns {void}
  */
-const Liquid = require('liquid-node');
-
-exports.registerInclude = function (engine, getter) {
-  class Include extends Liquid.Tag {
-    constructor(tagName, markup, tokens, ...rest) {
-      super(tagName, markup, tokens, ...rest);
-      this.includeName = tokens.trim();
-      this.parsed = {};
-    }
-
-    getPartial(name) {
-      if (this.parsed[name]) { return this.parsed[name]; }
-      const template = getter(name);
-      if (!template) { return undefined; }
-      this.parsed[name] = engine.parse(template);
-      return this.parsed[name];
-    }
-
-    render(context) {
-      const partial = this.getPartial(this.includeName);
-      return partial.then((p) => p.render(context));
-    }
-  }
-
-  return engine.registerTag('include', Include);
-};
+export function registerIncludeTag(engine, includes) {
+  engine.registerTag("include", {
+    parse(/** @type {{ args: string }} */ tagToken) {
+      this.includeName = tagToken.args.trim().replace(/^['"]|['"]$/g, "");
+    },
+    /**
+     * @param {{ environments: Record<string, unknown> }} scope
+     * @param {{ write(text: string): void }} emitter
+     * @returns {Promise<void>}
+     */
+    async render(scope, emitter) {
+      const name = /** @type {{ includeName: string }} */ (
+        /** @type {unknown} */ (this)
+      ).includeName;
+      const body = includes[name];
+      if (!body) {
+        return;
+      }
+      // Partials render with the template's variables, like the 1.x
+      // context-based rendering
+      emitter.write(await engine.parseAndRender(body, scope.environments));
+    },
+  });
+}

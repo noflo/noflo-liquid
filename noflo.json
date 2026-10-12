@@ -1,0 +1,73 @@
+{
+  "format": "noflo-manifest",
+  "version": 1,
+  "id": "liquid",
+  "description": "Liquid template engine components for NoFlo",
+  "icon": null,
+  "npm": "@noflo/liquid",
+  "jsr": null,
+  "source": "https://github.com/noflo/noflo-liquid",
+  "revision": "992f46cec3254a237eae70c5674888ed7aa54fbd",
+  "loader": false,
+  "namespaces": {},
+  "components": [
+    {
+      "name": "liquid/Template",
+      "path": "components/Template.js",
+      "type": "elementary",
+      "description": "Process data with the Liquid template engine",
+      "icon": "html5",
+      "signature": {
+        "inports": [
+          {
+            "name": "includes",
+            "datatype": "object",
+            "addressable": false,
+            "description": "Include registration: an object with path and body. Includes must arrive before the template",
+            "required": false,
+            "control": false
+          },
+          {
+            "name": "template",
+            "datatype": "string",
+            "addressable": false,
+            "description": "Liquid template source",
+            "required": true,
+            "control": false
+          },
+          {
+            "name": "variables",
+            "datatype": "object",
+            "addressable": false,
+            "description": "Variables available to the template",
+            "required": true,
+            "control": false
+          }
+        ],
+        "outports": [
+          {
+            "name": "out",
+            "datatype": "string",
+            "addressable": false,
+            "description": "Rendered output",
+            "required": false,
+            "control": false
+          },
+          {
+            "name": "error",
+            "datatype": "object",
+            "addressable": false,
+            "description": "",
+            "required": false,
+            "control": false
+          }
+        ]
+      },
+      "spec": null,
+      "assembly": false,
+      "platforms": [
+        "node"
+      ]
+    }
+  ]
+}
