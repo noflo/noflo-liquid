@@ -30,8 +30,8 @@ const nextData = (socket) =>
   });
 
 /**
- * Sends includes first, then the template and variables, returning the
- * rendered output.
+ * Sends includes as one bracketed control stream, then the template and
+ * variables, returning the rendered output.
  * @param {import("@noflo/noflo").Component} c
  * @param {string} template
  * @param {Record<string, unknown>} variables
@@ -46,10 +46,16 @@ const render = async (c, template, variables, includes = []) => {
   const variablesSocket = noflo.internalSocket.createSocket();
   c.inPorts.template.attach(templateSocket);
   c.inPorts.variables.attach(variablesSocket);
-  for (const include of includes) {
-    const socket = noflo.internalSocket.createSocket();
-    c.inPorts.includes.attach(socket);
-    socket.post(new noflo.IP("data", include));
+  // Control ports buffer the latest stream: multiple registrations must
+  // arrive as one bracketed stream or each discards the previous
+  if (includes.length > 0) {
+    const includesSocket = noflo.internalSocket.createSocket();
+    c.inPorts.includes.attach(includesSocket);
+    includesSocket.post(new noflo.IP("openBracket", null));
+    for (const include of includes) {
+      includesSocket.post(new noflo.IP("data", include));
+    }
+    includesSocket.post(new noflo.IP("closeBracket", null));
   }
   variablesSocket.post(new noflo.IP("data", variables));
   templateSocket.post(new noflo.IP("data", template));

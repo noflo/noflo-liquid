@@ -25,7 +25,8 @@ export function getComponent() {
       includes: {
         datatype: "object",
         description:
-          "Include registration: an object with path and body. Includes must arrive before the template",
+          "Include registration: objects with path and body, sent as one bracketed stream; registrations accumulate and apply to renders made after they arrive",
+        control: true,
         required: false,
       },
       template: {
@@ -59,11 +60,24 @@ export function getComponent() {
   };
 
   c.process((input, output) => {
+    // Control port: the latest buffered stream, read non-consumingly.
+    // Re-registering on every activation is idempotent, and reading
+    // must not early-return — a register-and-return branch would consume
+    // every render activation now that the port never drains
     if (input.hasData("includes")) {
-      const include = input.getData("includes");
-      includes[path.basename(include.path)] = include.body;
-      output.done();
-      return;
+      // Non-addressable control port: the buffered stream scan returns
+      // the plain IP array
+      const stream = /** @type {import("@noflo/noflo").IP[] | undefined} */ (
+        input.getStream("includes")
+      );
+      if (stream) {
+        for (const ip of stream) {
+          if (ip.type !== "data") {
+            continue;
+          }
+          includes[path.basename(ip.data.path)] = ip.data.body;
+        }
+      }
     }
     if (!input.hasData("template", "variables")) {
       return;
