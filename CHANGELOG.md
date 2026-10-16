@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.0.0-alpha.2] - 2026-10-16
+
 ### Changed
 
 - The `includes` inport of `liquid/Template` is now a control port: include registration is standing engine configuration, not per-message data. Registrations arrive as one bracketed stream on the port and are read non-consumingly — re-registration on every activation is idempotent. Under assembly wrapping (`asAssembly`/`wrapAssembly`) this keeps `includes` out of the per-message field mapping, where a missing field previously delivered `null` and crashed the component's path handling. The old consume-one-include-per-activation behavior is gone: send all registrations as one bracketed stream
