@@ -28,6 +28,9 @@ export function getComponent() {
           "Include registration: objects with path and body, sent as one bracketed stream; registrations accumulate and apply to renders made after they arrive",
         control: true,
         required: false,
+        // The include corpus is shared site configuration delivered
+        // unscoped; renders may run under message scopes
+        scoped: false,
       },
       template: {
         datatype: "string",
