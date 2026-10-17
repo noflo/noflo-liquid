@@ -54,7 +54,11 @@ export function getComponent() {
     },
   });
 
-  c.forwardBrackets = { variables: ["out", "error"] };
+  // The includes port declares framing termination: its bracketed
+  // corpus is standing configuration consumed non-consumingly — the
+  // framing IPs must not strand in the buffer blocking closedown
+  // (work document #45: the declarable framing termination)
+  c.forwardBrackets = { variables: ["out", "error"], includes: [] };
 
   c.tearDown = async () => {
     for (const key of Object.keys(includes)) {
