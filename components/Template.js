@@ -63,27 +63,45 @@ export function getComponent() {
   };
 
   c.process((input, output) => {
-    // Control port: the latest buffered stream, read non-consumingly.
-    // Re-registering on every activation is idempotent, and reading
-    // must not early-return — a register-and-return branch would consume
-    // every render activation now that the port never drains
+    // Firing pattern, has-level only — no get before every gate passes,
+    // so a decline can never leak an activated context: the render waits
+    // for the include corpus to complete (the bracketed listing stream
+    // closed, or the corpus leg's error marker arrived — a site without
+    // an _includes directory), and for the template and variables
+    if (input.attached("includes").length > 0) {
+      const corpusReady =
+        input.hasStream("includes") ||
+        input.has(
+          "includes",
+          (/** @type {{ data: unknown }} */ ip) => ip.data instanceof Error,
+        );
+      if (!corpusReady) {
+        return;
+      }
+    }
+    if (!input.hasData("template", "variables")) {
+      return;
+    }
+    // The reads: the activation opens here — every path past the gates
+    // completes. The registration is non-consuming (a control port), so
+    // the corpus stays buffered and re-registers idempotently; the error
+    // marker carries no template
     if (input.hasData("includes")) {
-      // Non-addressable control port: the buffered stream scan returns
-      // the plain IP array
       const stream = /** @type {import("@noflo/noflo").IP[] | undefined} */ (
         input.getStream("includes")
       );
       if (stream) {
         for (const ip of stream) {
-          if (ip.type !== "data") {
+          if (
+            ip.type !== "data" ||
+            !ip.data?.path ||
+            ip.data instanceof Error
+          ) {
             continue;
           }
           includes[path.basename(ip.data.path)] = ip.data.body;
         }
       }
-    }
-    if (!input.hasData("template", "variables")) {
-      return;
     }
     const [template, variables] = input.getData("template", "variables");
     engine
